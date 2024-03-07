@@ -5,8 +5,8 @@ import json
 
 def main():
     #Get Auth token from Spotify API
-    client_id = 'c01a3b1a66504c62bf5c01416a829bc9'
-    client_secret = '0e186cf61c774022944cea7e1103e8db'
+    #client_id = 
+    #client_secret = 
 
     client_creds = base64.b64encode(f"{client_id}:{client_secret}".encode())
     token_url = "https://accounts.spotify.com/api/token"
