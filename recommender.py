@@ -3,6 +3,9 @@ from typing import Tuple, List
 import implicit
 import scipy
 from implicit.datasets.lastfm import get_lastfm
+import spotify
+import numpy as np
+from scipy.sparse import coo_matrix, hstack
 
 class ImplicitRecommender:
     def __init__(self, artists: List['str'], users: List['str'],
@@ -28,6 +31,23 @@ class ImplicitRecommender:
 def main():
     #Load the dataset of user to artist relationships
     artists, users, artist_user_plays = get_lastfm()
+    users = np.append(users, 'ena456')
+
+    my_profile = spotify.SpotipyWrapper('ena456', '', '')
+    my_profile.recommend_playlists()
+    artist_names = my_profile.get_artist_names()
+    artist_freq = my_profile.get_artist_freq()
+    user_profile = [0] * len(artists)
+
+    for i, artist in enumerate(artists):
+        if artist in artist_names:
+            user_profile[i] += artist_freq[artist]
+    new_col = coo_matrix(user_profile)
+    new_col = new_col.reshape(-1, 1)
+
+    #Add user column
+    artist_user_plays = hstack([artist_user_plays, new_col])
+
     user_plays = artist_user_plays.T.tocsr()
 
     #Initialize ALS model with Implicit library
@@ -40,7 +60,7 @@ def main():
     recommender.fit(user_plays)
 
     #Recommend a user artists
-    artists, scores = recommender.recommend(2, user_plays)
+    artists, scores = recommender.recommend(len(users)-1, user_plays)
 
     for artist, score in zip(artists, scores):
         print(f"{artist}: {score}")

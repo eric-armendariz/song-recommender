@@ -1,56 +1,48 @@
-import requests
-import base64
-import json
+from __future__ import print_function
+import sys
+import spotipy
+import spotipy.util as util
 
+scope = 'user-library-read'
 
-def main():
-    #Get Auth token from Spotify API
-    #client_id = 
-    #client_secret = 
+def count_artists(results, artists, artistSet):
+    if ('items' in results):
+        for i, item in enumerate(results['items']):
+            track = item['track']
+            artist_name = track['artists'][0]['name'].lower()
+            artists[artist_name] = artists.get(artist_name, 0) + 1
 
-    client_creds = base64.b64encode(f"{client_id}:{client_secret}".encode())
-    token_url = "https://accounts.spotify.com/api/token"
+            if artist_name not in artistSet:
+                artistSet.add(artist_name)
 
-    token_data = {
-        "grant_type": "client_credentials"
-    }
+    return artists, artistSet
 
-    token_header = {
-        "authorization": f"Basic {client_creds.decode()}"
-    }
+class SpotipyWrapper:
+    def __init__(self, user_name, client_id, client_secret, redirect_uri="http://localhost:8080"):
+        scope = 'user-library-read'
+        self.token = util.prompt_for_user_token(user_name, scope, client_id, client_secret,
+                                            redirect_uri)
+        self.artistFreq = {}
+        self.artistNames = set()
+        self.username = user_name
 
-    r = requests.post(token_url, data=token_data, headers=token_header)
-    token_response = r.json()
-    access_token = token_response['access_token']
+    def recommend_playlists(self):
+        if self.token:
+            sp = spotipy.Spotify(auth=self.token)
+            results = sp.current_user_playlists()
+            for playlist in results['items']:
+                playlist_info = sp.playlist(playlist['id'], fields="tracks, next")
+                tracks = playlist_info["tracks"]
+                self.artistFreq, self.artistNames = count_artists(tracks, self.artistFreq, self.artistNames)
 
-    request_header = {
-        "Authorization": f"Bearer {access_token}"
-    }
+                while tracks['next']:
+                    tracks = sp.next(tracks)
+                    self.artistFreq, self.artistNames = count_artists(tracks, self.artistFreq, self.artistNames)
+        else:
+            print("Don't have token for ", self.username)
 
-
-    #Get playlists from user
-    #get_user_id(request_header)
-
-    get_user_playlists(request_header)
-
-
-def get_user_id(header):
-    web_link = "https://api.spotify.com/v1/me"
-    r = requests.get(web_link, headers=header)
-    response = r.json()
-    uri = response['uri']
-    return uri[13:]
+    def get_artist_names(self):
+        return self.artistNames
     
-
-def get_user_playlists(header, user_id="ena456-us"):
-    web_link = "https://api.spotify.com/v1/users/" + user_id + "/playlists"
-    r = requests.get(web_link, headers=header)
-
-    my_playlists = r.json()
-
-    print(my_playlists['items'][0]['name'])
-
-    
-
-if __name__ == "__main__":
-    main()
+    def get_artist_freq(self):
+        return self.artistFreq
