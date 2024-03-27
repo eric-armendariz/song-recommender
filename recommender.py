@@ -33,8 +33,8 @@ def main():
     artists, users, artist_user_plays = get_lastfm()
     users = np.append(users, 'ena456')
 
-    my_profile = spotify.SpotipyWrapper('ena456', '', '')
-    my_profile.recommend_playlists()
+    my_profile = spotify.SpotipyWrapper('ena456', 'c01a3b1a66504c62bf5c01416a829bc9', '0e186cf61c774022944cea7e1103e8db')
+    my_profile.add_user_playlists()
     artist_names = my_profile.get_artist_names()
     artist_freq = my_profile.get_artist_freq()
     user_profile = [0] * len(artists)

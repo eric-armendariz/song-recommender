@@ -26,7 +26,7 @@ class SpotipyWrapper:
         self.artistNames = set()
         self.username = user_name
 
-    def recommend_playlists(self):
+    def add_user_playlists(self):
         if self.token:
             sp = spotipy.Spotify(auth=self.token)
             results = sp.current_user_playlists()
