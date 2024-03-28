@@ -8,7 +8,7 @@ app.secret_key = ';(,W[vcdP-Q2SD/'
 
 CLIENT_ID = 'c01a3b1a66504c62bf5c01416a829bc9'
 CLIENT_SECRET = '0e186cf61c774022944cea7e1103e8db'
-REDIRECT_URI = 'http://localhost:8080/callback'
+REDIRECT_URI = 'http://localhost:5000/callback'
 
 AUTH_URL = 'https://accounts.spotify.com/authorize'
 TOKEN_URL = 'https://accounts.spotify.com/api/token'
@@ -31,7 +31,6 @@ def login():
     }
 
     auth_url = f"{AUTH_URL}?{urllib.parse.urlencode(params)}"
-
     return redirect(auth_url)
 
 @app.route('/callback')
@@ -53,7 +52,7 @@ def callback():
 
         session['access_token'] = token_info['access_token']
         session['refresh_token'] = token_info['refresh_token']
-        session['expires_at'] = datetime.now().timestamp() + token_info['expires_in']
+        session['expires_at'] = datetime.datetime.now().timestamp() + token_info['expires_in']
 
         return redirect('/playlists')
     
@@ -62,7 +61,7 @@ def get_playlists():
     if 'access_token' not in session:
         return redirect('/login')
     
-    if datetime.now().timestamp() > session['expires_at']:
+    if datetime.datetime.now().timestamp() > session['expires_at']:
         return redirect('/refresh-token')
     
     headers = {
@@ -79,7 +78,7 @@ def refresh_token():
     if 'refresh_token' not in session:
         return redirect('/login')
     
-    if datetime.now().timestamp() > session['expires_at']:
+    if datetime.datetime.now().timestamp() > session['expires_at']:
         req_body = {
             'grant_type': 'refresh_token',
             'refresh_token': session['refresh_token'],
@@ -91,7 +90,7 @@ def refresh_token():
         token_info = response.json()
 
         session['access_token'] = token_info['access_token']
-        session['expires_at'] = datetime.now().timestamp() + token_info['expires_in']
+        session['expires_at'] = datetime.datetime.now().timestamp() + token_info['expires_in']
     return redirect('/playlists')
 
 
